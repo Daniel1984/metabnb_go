@@ -7,46 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	models "../models"
 	"github.com/julienschmidt/httprouter"
 )
-
-// ListingsMetadata represents listings metadata from airbnb endpoint
-type ListingsMetadata struct {
-	ExploreTabs []struct {
-		Sections []struct {
-			Listings []struct {
-				Listing struct {
-					BathroomLabel         string  `json:"bathroom_label"`
-					Bathrooms             float32 `json:"bathrooms"`
-					BedLabel              string  `json:"bed_label"`
-					BedroomLabel          string  `json:"bedroom_label"`
-					Bedrooms              float32 `json:"bedrooms"`
-					Beds                  float32 `json:"beds"`
-					City                  string  `json:"city"`
-					ID                    int64   `json:"id"`
-					IsNewListing          bool    `json:"is_new_listing"`
-					IsSuperhost           bool    `json:"is_superhost"`
-					Lat                   float64 `json:"lat"`
-					Lng                   float64 `json:"lng"`
-					LocalizedCity         string  `json:"localized_city"`
-					LocalizedNeighborhood string  `json:"localized_neighborhood"`
-					Name                  string  `json:"name"`
-					Neighborhood          string  `json:"neighborhood"`
-					PersonCapacity        int     `json:"person_capacity"`
-					PictureCount          int     `json:"picture_count"`
-					PictureURL            string  `json:"picture_url"`
-					Picture               struct {
-						LargeRo string `json:"large_ro"`
-					} `json:"picture"`
-				} `json:"listing"`
-			} `json:"listings"`
-		} `json:"sections"`
-		PaginationMetadata struct {
-			HasNextPage   bool `json:"has_next_page"`
-			SectionOffset int  `json:"section_offset"`
-		} `json:"pagination_metadata"`
-	} `json:"explore_tabs"`
-}
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
 
@@ -88,7 +51,7 @@ func getListingsURL(location string) string {
 // Index root path handler
 func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	listingsMetadata := ListingsMetadata{}
+	listingsMetadata := models.ListingsMetadata{}
 	url := getListingsURL("london")
 
 	err := getJSON(url, &listingsMetadata)
