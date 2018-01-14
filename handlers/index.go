@@ -57,11 +57,15 @@ func Index(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	err := getJSON(url, &listingsMetadata)
 	if err != nil {
 		fmt.Println(err)
+		http.Error(w, http.StatusText(403), http.StatusForbidden)
+		return
 	}
 
 	json, errMarshal := json.Marshal(listingsMetadata)
 	if errMarshal != nil {
 		fmt.Println(err)
+		http.Error(w, http.StatusText(403), http.StatusForbidden)
+		return
 	}
 
 	w.Write(json)
