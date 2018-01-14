@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	handlers "./handlers"
+	controllers "./controllers"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
 	router := httprouter.New()
-	router.GET("/", handlers.Index)
+	router.GET("/", controllers.Listing)
 	log.Fatal(http.ListenAndServe(":8081", router))
 }
