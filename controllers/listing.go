@@ -8,42 +8,11 @@ import (
 	"net/url"
 	"time"
 
-	models "../models"
 	"github.com/julienschmidt/httprouter"
+	"metabnb/models"
 )
 
 var httpClient = &http.Client{Timeout: 10 * time.Second}
-
-func getJSON(url string, target interface{}) error {
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("authority", "www.airbnb.com")
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
-	req.Header.Set("x-csrf-token", "V4$.airbnb.com$HxMVGU-RyKM$1Zwcm1JOrU3Tn0Y8oRrvN3Hc67ZQSbOKVnMjCRtZPzQ=")
-
-	res, getErr := httpClient.Do(req)
-	if getErr != nil {
-		return getErr
-	}
-
-	defer res.Body.Close()
-
-	body, readErr := ioutil.ReadAll(res.Body)
-	if readErr != nil {
-		return readErr
-	}
-
-	jsonErr := json.Unmarshal(body, target)
-
-	if jsonErr != nil {
-		return jsonErr
-	}
-
-	return nil
-}
 
 func getListingsURL(location string) string {
 	return fmt.Sprintf("https://www.airbnb.com/api/v2/explore_tabs"+
@@ -75,29 +44,43 @@ func getListingsURL(location string) string {
 		"&locale=en", location)
 }
 
+func getResponseBody(url string, ch chan []byte) {
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set("authority", "www.airbnb.com")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36")
+	req.Header.Set("x-csrf-token", "V4$.airbnb.com$HxMVGU-RyKM$1Zwcm1JOrU3Tn0Y8oRrvN3Hc67ZQSbOKVnMjCRtZPzQ=")
+	res, err := httpClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer res.Body.Close()
+
+	body, _ := ioutil.ReadAll(res.Body)
+	ch <- body
+}
+
 // Listing root path handler
-func Listing(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func GetListings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Content-Type", "application/json")
-	listingsMetadata := models.ListingsMetadata{}
 	queryValues := r.URL.Query()
 	street := queryValues.Get("street")
 
 	if street != "" {
-		sn := &url.URL{Path: street}
-		esn := sn.String()
+		streetName := &url.URL{Path: street}
+		encodedStreetName := streetName.String()
+		url := getListingsURL(encodedStreetName)
 
-		url := getListingsURL(esn)
+		channel := make(chan []byte)
+		go getResponseBody(url, channel)
+		responseBody := <-channel
 
-		err := getJSON(url, &listingsMetadata)
-		if err != nil {
-			fmt.Println(err)
-			http.Error(w, http.StatusText(403), http.StatusForbidden)
-			return
-		}
+		listingsMetadata := models.ListingsMetadata{}
+		json.Unmarshal(responseBody, &listingsMetadata)
+		fmt.Println(listingsMetadata)
 
 		json, errMarshal := json.Marshal(listingsMetadata)
 		if errMarshal != nil {
-			fmt.Println(err)
+			fmt.Println(errMarshal)
 			http.Error(w, http.StatusText(403), http.StatusForbidden)
 			return
 		}

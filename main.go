@@ -4,12 +4,12 @@ import (
 	"log"
 	"net/http"
 
-	controllers "./controllers"
 	"github.com/julienschmidt/httprouter"
+	"metabnb/controllers"
 )
 
 func main() {
 	router := httprouter.New()
-	router.GET("/", controllers.Listing)
+	router.GET("/", controllers.GetListings)
 	log.Fatal(http.ListenAndServe(":8081", router))
 }
