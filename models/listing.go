@@ -1,7 +1,7 @@
 package models
 
-// ListingsMetadata represents listings metadata from airbnb endpoint
-type ListingsMetadata struct {
+// Listing represents listings metadata from airbnb endpoint
+type Listing struct {
 	ExploreTabs []struct {
 		Sections []struct {
 			Listings []struct {

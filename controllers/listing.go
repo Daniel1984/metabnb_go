@@ -74,11 +74,11 @@ func GetListings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		go getResponseBody(url, channel)
 		responseBody := <-channel
 
-		listingsMetadata := models.ListingsMetadata{}
-		json.Unmarshal(responseBody, &listingsMetadata)
-		fmt.Println(listingsMetadata)
+		listing := models.Listing{}
+		json.Unmarshal(responseBody, &listing)
+		fmt.Println(listing)
 
-		json, errMarshal := json.Marshal(listingsMetadata)
+		json, errMarshal := json.Marshal(listing)
 		if errMarshal != nil {
 			fmt.Println(errMarshal)
 			http.Error(w, http.StatusText(403), http.StatusForbidden)
